@@ -1,4 +1,33 @@
 import type { FirestopStatus } from "@/types/database";
+import type { AppLocale } from "@/lib/i18n";
+
+export function getFirestopStatusLabel(
+  status: FirestopStatus,
+  locale: AppLocale = "en"
+): string {
+  const labels =
+    locale === "el"
+      ? {
+          new: "Νέα",
+          to_install: "Προς Τοποθέτηση",
+          installed: "Τοποθετημένη",
+          to_inspect: "Προς Επιθεώρηση",
+          approved: "Εγκεκριμένη",
+          rejected: "Απορριφθείσα",
+          repaired: "Επισκευασμένη",
+        }
+      : {
+          new: "New",
+          to_install: "To Install",
+          installed: "Installed",
+          to_inspect: "To Inspect",
+          approved: "Approved",
+          rejected: "Rejected",
+          repaired: "Repaired",
+        };
+
+  return labels[status] ?? status;
+}
 
 export function getFirestopStatusClasses(status: FirestopStatus): string {
   switch (status) {
