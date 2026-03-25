@@ -14,6 +14,59 @@ type UploadFloorplanFormProps = {
   locale: AppLocale;
 };
 
+async function normalizeImageFile(file: File) {
+  if (!file.type.startsWith("image/")) {
+    return file;
+  }
+
+  // Keep SVG as-is instead of rasterizing it.
+  if (file.type === "image/svg+xml") {
+    return file;
+  }
+
+  try {
+    const objectUrl = URL.createObjectURL(file);
+
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Image decode failed"));
+      img.src = objectUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth || image.width;
+    canvas.height = image.naturalHeight || image.height;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      URL.revokeObjectURL(objectUrl);
+      return file;
+    }
+
+    context.drawImage(image, 0, 0);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.92);
+    });
+
+    URL.revokeObjectURL(objectUrl);
+
+    if (!blob) {
+      return file;
+    }
+
+    const normalizedName = file.name.replace(/\.[^.]+$/, "") || "floorplan";
+
+    return new File([blob], `${normalizedName}.jpg`, {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
+  } catch {
+    return file;
+  }
+}
+
 export function UploadFloorplanForm({
   projectId,
   floorplanId,
@@ -55,6 +108,13 @@ export function UploadFloorplanForm({
         setSuccess(null);
 
         try {
+          const selectedFile = formData.get("file");
+
+          if (selectedFile instanceof File && selectedFile.size > 0) {
+            const normalizedFile = await normalizeImageFile(selectedFile);
+            formData.set("file", normalizedFile);
+          }
+
           const result = await action(formData);
 
           if (!result.success) {
