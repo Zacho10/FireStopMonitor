@@ -6,7 +6,10 @@ import type { AppLocale } from "@/lib/i18n";
 
 type CreateFloorplanFormProps = {
   projectId: string;
-  action: (formData: FormData) => Promise<void>;
+  action: (formData: FormData) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
   locale: AppLocale;
 };
 
@@ -54,12 +57,16 @@ export function CreateFloorplanForm({
         setSuccess(null);
 
         try {
-          await action(formData);
+          const result = await action(formData);
+
+          if (!result.success) {
+            setError(result.error || copy.fallbackError);
+            return;
+          }
+
           formRef.current?.reset();
           setSuccess(copy.success);
           router.refresh();
-        } catch (err) {
-          setError(err instanceof Error ? err.message : copy.fallbackError);
         } finally {
           setIsSaving(false);
         }

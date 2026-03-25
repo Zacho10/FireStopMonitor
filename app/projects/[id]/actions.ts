@@ -6,51 +6,57 @@ import { supabase } from "@/lib/supabase";
 import { logAuditEvent } from "@/lib/user-admin";
 
 export async function createFloorplan(formData: FormData) {
-  const projectId = formData.get("projectId") as string;
-  const access = await requireProjectEditAccess(projectId);
-  const title = (formData.get("title") as string)?.trim();
-  const floorName = (formData.get("floor_name") as string)?.trim();
+  try {
+    const projectId = formData.get("projectId") as string;
+    const access = await requireProjectEditAccess(projectId);
+    const title = (formData.get("title") as string)?.trim();
+    const floorName = (formData.get("floor_name") as string)?.trim();
 
-  if (!projectId) {
-    throw new Error("Missing project id");
+    if (!projectId) {
+      return { success: false, error: "Missing project id" };
+    }
+
+    if (!title) {
+      return { success: false, error: "Please enter a floor or area name" };
+    }
+
+    const { data, error } = await supabase
+      .from("floorplans")
+      .insert({
+        project_id: projectId,
+        title,
+        floor_name: floorName || null,
+        image_url: null,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    await logAuditEvent({
+      actorUserId: access.session.userId,
+      actorUsername: access.session.username,
+      action: "create_floorplan",
+      entityType: "floorplan",
+      entityId: data?.id || null,
+      description: `Created floorplan ${title} in project ${projectId}.`,
+      metadata: {
+        projectId,
+        floorplanId: data?.id || null,
+        floorplanTitle: title,
+      },
+    });
+
+    revalidatePath(`/projects/${projectId}`);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Could not create floorplan",
+    };
   }
-
-  if (!title) {
-    throw new Error("Please enter a floor or area name");
-  }
-
-  const { data, error } = await supabase
-    .from("floorplans")
-    .insert({
-      project_id: projectId,
-      title,
-      floor_name: floorName || null,
-      image_url: null,
-      width: null,
-      height: null,
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  await logAuditEvent({
-    actorUserId: access.session.userId,
-    actorUsername: access.session.username,
-    action: "create_floorplan",
-    entityType: "floorplan",
-    entityId: data?.id || null,
-    description: `Created floorplan ${title} in project ${projectId}.`,
-    metadata: {
-      projectId,
-      floorplanId: data?.id || null,
-      floorplanTitle: title,
-    },
-  });
-
-  revalidatePath(`/projects/${projectId}`);
 }
 
 export async function deleteFloorplan(formData: FormData) {
