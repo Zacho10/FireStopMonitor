@@ -51,7 +51,9 @@ export default async function ProjectDetailPage({
       session.role === "admin"
         ? getProjectMembershipsByProjectId(id)
         : Promise.resolve({ data: null, error: null }),
-      getProjectAuditLogs(id, 12),
+      session.role === "admin"
+        ? getProjectAuditLogs(id, 12)
+        : Promise.resolve({ data: null, error: null }),
     ]);
 
   const firestopSummary = summarizeFirestopsByStatus(firestops || []);
@@ -311,59 +313,61 @@ export default async function ProjectDetailPage({
           </>
         ) : null}
 
-        <section className="mb-8 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-              {copy.activityFeed}
-            </p>
-            <h2 className="mt-2 text-lg font-semibold text-slate-900">{copy.recentActivity}</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {copy.activityDesc}
-            </p>
-          </div>
-
-          {projectAuditLogsError ? (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-              Error loading recent activity: {projectAuditLogsError}
+        {session.role === "admin" ? (
+          <section className="mb-8 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                {copy.activityFeed}
+              </p>
+              <h2 className="mt-2 text-lg font-semibold text-slate-900">{copy.recentActivity}</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {copy.activityDesc}
+              </p>
             </div>
-          ) : null}
 
-          {!projectAuditLogsError && !projectAuditLogs?.length ? (
-            <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              {copy.noActivity}
-            </div>
-          ) : null}
+            {projectAuditLogsError ? (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                Error loading recent activity: {projectAuditLogsError}
+              </div>
+            ) : null}
 
-          {projectAuditLogs?.length ? (
-            <div className="mt-4 space-y-3">
-              {projectAuditLogs.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-slate-800">
-                      {entry.actor_username || "System"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {new Date(entry.created_at).toLocaleString("en-GB", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+            {!projectAuditLogsError && !projectAuditLogs?.length ? (
+              <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                {copy.noActivity}
+              </div>
+            ) : null}
+
+            {projectAuditLogs?.length ? (
+              <div className="mt-4 space-y-3">
+                {projectAuditLogs.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-slate-800">
+                        {entry.actor_username || "System"}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {new Date(entry.created_at).toLocaleString("en-GB", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-700">{entry.description}</p>
+                    <p className="mt-2 text-xs uppercase tracking-wide text-slate-400">
+                      {entry.action.replaceAll("_", " ")}
                     </p>
                   </div>
-                  <p className="mt-2 text-sm text-slate-700">{entry.description}</p>
-                  <p className="mt-2 text-xs uppercase tracking-wide text-slate-400">
-                    {entry.action.replaceAll("_", " ")}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </section>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         {canEdit ? (
           <div className="mb-8">

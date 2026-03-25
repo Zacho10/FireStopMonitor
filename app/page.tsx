@@ -27,7 +27,7 @@ export default async function HomePage() {
   ] = await Promise.all([
     getFloorplansByProjectIds(projectIds),
     getFirestopsByProjectIds(projectIds),
-    getAuditLogs(60),
+    canManage ? getAuditLogs(60) : Promise.resolve({ data: null }),
   ]);
   const firestopSummary = summarizeFirestopsByStatus(firestops || []);
   const pendingCount =
@@ -193,42 +193,44 @@ export default async function HomePage() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-              {copy.recentActivity}
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-900">{copy.latestChanges}</h2>
+          {canManage ? (
+            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                {copy.recentActivity}
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">{copy.latestChanges}</h2>
 
-            {!recentActivity.length ? (
-              <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                {copy.noRecentActivity}
-              </div>
-            ) : (
-              <div className="mt-6 space-y-3">
-                {recentActivity.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-slate-800">
-                        {entry.actor_username || "System"}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {new Date(entry.created_at).toLocaleString("en-GB", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
+              {!recentActivity.length ? (
+                <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                  {copy.noRecentActivity}
+                </div>
+              ) : (
+                <div className="mt-6 space-y-3">
+                  {recentActivity.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium text-slate-800">
+                          {entry.actor_username || "System"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(entry.created_at).toLocaleString("en-GB", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-700">{entry.description}</p>
                     </div>
-                    <p className="mt-2 text-sm text-slate-700">{entry.description}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
         </div>
 
         {error && (
