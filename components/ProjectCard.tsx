@@ -63,16 +63,22 @@ export function ProjectCard({
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center">
-            <p className="text-xs uppercase tracking-wide text-slate-400">{copy.firestops}</p>
+          <div className="flex min-h-[110px] flex-col items-center justify-center rounded-2xl bg-slate-50 px-4 py-4 text-center">
+            <p className="max-w-[10rem] text-xs uppercase tracking-wide text-slate-400">
+              {copy.firestops}
+            </p>
             <p className="mt-2 text-xl font-semibold text-slate-900">{firestops.length}</p>
           </div>
-          <div className="rounded-2xl bg-amber-50 px-3 py-3 text-center">
-            <p className="text-xs uppercase tracking-wide text-amber-600">{copy.pending}</p>
+          <div className="flex min-h-[110px] flex-col items-center justify-center rounded-2xl bg-amber-50 px-4 py-4 text-center">
+            <p className="max-w-[10rem] text-xs uppercase tracking-wide text-amber-600">
+              {copy.pending}
+            </p>
             <p className="mt-2 text-xl font-semibold text-amber-700">{pendingCount}</p>
           </div>
-          <div className="rounded-2xl bg-green-50 px-3 py-3 text-center">
-            <p className="text-xs uppercase tracking-wide text-green-600">{copy.approved}</p>
+          <div className="flex min-h-[110px] flex-col items-center justify-center rounded-2xl bg-green-50 px-4 py-4 text-center">
+            <p className="max-w-[10rem] text-xs uppercase tracking-wide text-green-600">
+              {copy.approved}
+            </p>
             <p className="mt-2 text-xl font-semibold text-green-700">{summary.approved}</p>
           </div>
         </div>
